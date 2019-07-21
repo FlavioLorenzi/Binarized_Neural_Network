@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
+#metodi utilizzati dentro network (per creare le reti)
 
 
 def binarize(x):
