@@ -229,7 +229,7 @@ def binary_mnist_sbn(input, training=True):
 	
 
 
-#ottieni newtork corrispondente
+#passaggio newtork corrispondente
 
 def get_network(type, dataset, *args, **kargs):
 

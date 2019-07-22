@@ -1,3 +1,6 @@
+#Flavio Lorenzi AIRO
+#script per il training della rete
+
 import tensorflow as tf
 import numpy as np
 import argparse
@@ -11,6 +14,7 @@ from utils.progressbar import ProgressBar
 import optimizers
 
 
+#by default : standard network mnist, with epochs=10 and batchsize=32 with lr=1e-3; vanilla Adam 
 
 parser = argparse.ArgumentParser(description='Training module for binarized nets')
 parser.add_argument('--network', type=str, default='standard', choices=['standard','binary','binary_sbn'], help='Type of network to be used')
@@ -50,26 +54,31 @@ if not os.path.exists(test_logdir):
 	
 
 	
-# dataset preparation using tensorflow dataset iterators
-x_train, y_train, x_test, y_test, num_classes = datasets.load_dataset(DATASET)
+# DATASET UPLOADING using tensorflow dataset iterators
+x_train, y_train, x_test, y_test, num_classes = datasets.load_dataset(DATASET)	#scarica il dataset richiesto
 
 batch_size = tf.placeholder(tf.int64)
-data_features, data_labels = tf.placeholder(tf.float32, (None,)+x_train.shape[1:]), tf.placeholder(tf.int32, (None,)+y_train.shape[1:])
 
+#carico i dati di training
+data_features, data_labels = tf.placeholder(tf.float32, (None,)+x_train.shape[1:]), tf.placeholder(tf.int32, (None,)+y_train.shape[1:])
 train_data = tf.data.Dataset.from_tensor_slices((data_features, data_labels))
 train_data = train_data.repeat().shuffle(x_train.shape[0]).batch(batch_size)
 
+#carico dati test
 test_data = tf.data.Dataset.from_tensor_slices((data_features, data_labels))
 test_data = test_data.repeat().shuffle(x_test.shape[0]).batch(batch_size)
 
+#itera sulla struttura dati
 data_iterator = tf.data.Iterator.from_structure(train_data.output_types, train_data.output_shapes)
-
 features, labels = data_iterator.get_next()
+
+#first step
 train_initialization = data_iterator.make_initializer(train_data)
 test_initialization = data_iterator.make_initializer(test_data)
 
 
-# network initialization
+
+# NETWORK INIT
 is_training = tf.get_variable('is_training', initializer=tf.constant(False, tf.bool))
 switch_training_inference = tf.assign(is_training, tf.logical_not(is_training))
 
@@ -91,6 +100,7 @@ with tf.name_scope('trainer_optimizer'):
 		train_op = optimizer.minimize(loss=loss, global_step=global_step)
 
 	
+
 # metrics definition
 with tf.variable_scope('metrics'):
 	mloss, mloss_update	  = tf.metrics.mean(cross_entropy)
@@ -179,3 +189,5 @@ with tf.Session() as sess:
 	saver.save(sess, os.path.join(session_modeldir, 'model.ckpt'))
 
 print('\nTraining completed!\nNetwork model is saved in  {}\nTraining logs are saved in {}'.format(session_modeldir, session_logdir))
+
+
