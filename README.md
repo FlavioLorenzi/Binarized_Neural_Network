@@ -1,4 +1,4 @@
-NB: yet to implement and finish
+NB: yet to implement (work not finished)
 
 Binarized Neural Network on three types of datasets: MNIST, CIFAR-10, SVHN.
 Tensorflow framework and Python_3 are required.
