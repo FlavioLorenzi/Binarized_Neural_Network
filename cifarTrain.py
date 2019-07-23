@@ -8,13 +8,28 @@ import networks
 import math
 import time
 import os
-
-
 from utils.progressbar import ProgressBar
 import optimizers
 
 
-#
+
+
+#INTRO
+
+parser = argparse.ArgumentParser(description='Training module for binarized nets')
+parser.add_argument('--network', type=str, default='standard', choices=['standard','binary','binary_sbn'], help='Type of the network')
+parser.add_argument('--modeldir', type=str, default='./models/', help='path where to save networks weights')
+parser.add_argument('--logdir', type=str, default='./logs/', help='folder for tensorboard logs')
+parser.add_argument('--epochs', type=int, default=10, help='Number of epochs performed during training')
+parser.add_argument('--batchsize', type=int, default=32, help='Dimension of the training batch')
+parser.add_argument('--lr', type=float, help='Starting learning rate value')
+parser.add_argument('--switch_opt', default=False, action='store_true', help='if True we pass on AdaMax from Vanilla Adam')
+args = parser.parse_args()
+
+
+##############################
+## WE ARE TRAINING CIFAR-10 ##
+##############################
 
 #LOAD CIFAR10
 #https://www.tensorflow.org/api_docs/python/tf/keras/datasets/cifar10/load_data
@@ -22,38 +37,17 @@ def load_cifar10():
 	(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 	return x_train, np.squeeze(y_train), x_test, np.squeeze(y_test), 10
 
-#
-
-
-#INTRO
-
-parser = argparse.ArgumentParser(description='Training module for binarized nets')
-parser.add_argument('--network', type=str, default='standard', choices=['standard','binary','binary_sbn'], help='Type of network to be used')
-parser.add_argument('--modeldir', type=str, default='./models/', help='path where to save network\'s weights')
-parser.add_argument('--logdir', type=str, default='./logs/', help='folder for tensorboard logs')
-parser.add_argument('--epochs', type=int, default=10, help='Number of epochs performed during training')
-parser.add_argument('--batchsize', type=int, default=32, help='Dimension of the training batch')
-parser.add_argument('--stepsize', type=float, default=1e-3, help='Starting optimizer learning rate value')
-parser.add_argument('--shift_optimizer', default=False, action='store_true', help='Toggle the use of shift based AdaMax instead of vanilla Adam optimizer')
-args = parser.parse_args()
-
-NETWORK = args.network  #to choice between ['standard','binary','binary_sbn']
 DATASET = 'cifar10'
-MODELDIR = args.modeldir #folder saving
-LOGDIR = args.logdir     #folder saving
-EPOCHS = args.epochs     #standard 10 epochs
-BATCH_SIZE = args.batchsize  #batch size == 32
-STEPSIZE = args.stepsize     #Learning rate = 1e-3
-SHIFT_OPT = args.shift_optimizer   #to use the shifting
+LR = 1e-3     #Optimizer Learning Rate
+NETWORK = args.network  #can choice between ['standard','binary','binary_sbn']
 
-
+#CARICA DATI SESSIONE
 timestamp = int(time.time())
-
 model_name = ''.join([str(timestamp), '_', NETWORK, '_', DATASET])
-session_logdir = os.path.join(LOGDIR, model_name)
+session_logdir = os.path.join(args.logdir, model_name)
 train_logdir = os.path.join(session_logdir, 'train')
 test_logdir = os.path.join(session_logdir, 'test')
-session_modeldir = os.path.join(MODELDIR, model_name)
+session_modeldir = os.path.join(args.modeldir, model_name)
 
 if not os.path.exists(session_modeldir):
 	os.makedirs(session_modeldir)
@@ -96,12 +90,12 @@ xnet, ynet = networks.get_network(NETWORK, DATASET, features, training=is_traini
 
 with tf.name_scope('trainer_optimizer'):
 	#il learning rate ad ogni iterazione decade e va aggiornato
-	learning_rate = tf.Variable(STEPSIZE, name='learning_rate')
+	learning_rate = tf.Variable(LR, name='learning_rate')
 	learning_rate_decay = tf.placeholder(tf.float32, shape=(), name='lr_decay')
 	update_learning_rate = tf.assign(learning_rate, learning_rate / learning_rate_decay)
 	
 	#ottimizzatore corrente
-	opt_constructor = optimizers.ShiftBasedAdaMaxOptimizer if SHIFT_OPT else tf.train.AdamOptimizer
+	opt_constructor = optimizers.ShiftBasedAdaMaxOptimizer if args.switch_opt  else tf.train.AdamOptimizer
 	optimizer = opt_constructor(learning_rate=learning_rate)
 	cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ynet, labels=labels)
 	# loss function: "ci fa capire quanto funziona la rete"
@@ -141,8 +135,8 @@ merged_summary = tf.summary.merge([los_sum, acc_sum])   #utile per training e ev
 # network weights saver
 saver = tf.train.Saver()
 
-NUM_BATCHES_TRAIN = math.ceil(x_train.shape[0] / BATCH_SIZE)
-NUM_BATCHES_TEST = math.ceil(x_test.shape[0] / BATCH_SIZE)
+NUM_BATCHES_TRAIN = math.ceil(x_train.shape[0] / args.batchsize)
+NUM_BATCHES_TEST = math.ceil(x_test.shape[0] / args.batchsize)
 
 with tf.Session() as sess:
 
@@ -154,9 +148,9 @@ with tf.Session() as sess:
 	
 
 	#STAMPA
-	for epoch in range(EPOCHS):
+	for epoch in range(args.epochs):
 		
-		print("\nEPOCH %d/%d" % (epoch+1, EPOCHS))
+		print("\nEPOCH %d/%d" % (epoch+1, args.epochs))
 		
 
 		# exponential learning rate decay
@@ -169,7 +163,7 @@ with tf.Session() as sess:
 		###
 
 		# initialize training dataset and set batch normalization training
-		sess.run(train_initialization, feed_dict={data_features:x_train, data_labels:y_train, batch_size:BATCH_SIZE})
+		sess.run(train_initialization, feed_dict={data_features:x_train, data_labels:y_train, batch_size:args.batchsize})
 		sess.run(metrics_initializer)
 		sess.run(switch_training_inference)
 		
@@ -193,7 +187,7 @@ with tf.Session() as sess:
 		###
 		
 		# initialize the test dataset and set batc normalization inference
-		sess.run(test_initialization, feed_dict={data_features:x_test, data_labels:y_test, batch_size:BATCH_SIZE})
+		sess.run(test_initialization, feed_dict={data_features:x_test, data_labels:y_test, batch_size:args.batchsize})
 		sess.run(metrics_initializer)
 		sess.run(switch_training_inference)
 		
