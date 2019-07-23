@@ -1,29 +1,16 @@
 import tensorflow as tf
 import layers
 
-		
-#creazione MLP standard e binaria
 
-def multilayer_perceptron(input, units_list):
-	output = input
-	for l in range(len(units_list)):
-		output = tf.layers.dense(output, units_list[l], activation=tf.nn.tanh)
-		
-	return input, output
-	
-	
-def binary_multilayer_perceptron(input, units_list):
-	output = input
-	for l in range(len(units_list)-1):
-		output = layers.binaryDense(output, units_list[l], activation=None, name='binarydense'+str(l))
-		output = tf.layers.batch_normalization(output, training=True)
-		output = tf.clip_by_value(output, -1, 1)
-	output = layers.binaryDense(output, units_list[l+1], activation=None, name='binarydense'+str(len(units_list)-1))
-	output = tf.contrib.layers.batch_norm(output)
-	return input, output
+#CREAZIONE DELLE 6 RETI (3+3)
+
+#GET NETWORK PER TRAINING
 
 
-#---CIFAR 10---#
+
+#---CIFAR 10---# (A)
+
+#NB per cifar avremo CONVOLUTIONAL NEURAL NETWORK
 
 #standard deep neural network with ReLu non-linearity:
 #original batch normalization and vanilla adam
@@ -34,7 +21,7 @@ def cifar10(input, training=True):
 	out = tf.nn.relu(out)
 
 	out = tf.layers.conv2d(out, 128, [3,3], [1,1], padding='SAME', use_bias=False, name='conv2d_1')
-	out = tf.layers.max_pooling2d(out, [2,2], [2,2])
+	out = tf.layers.max_pooling2d(out, [2,2], [2,2])  #tipo una pressa che unisce e livella i dati
 	out = tf.layers.batch_normalization(out, training=training)
 	out = tf.nn.relu(out)
 
@@ -114,7 +101,7 @@ def binary_cifar10(input, training=True):
 	return input, output
 	
 #BNN with SIGN FUNCTION
-#shift based batch normalization
+#shift based batch normalization ---> spatial_shift_batch_norm quando è ancora conv2d, poi diventa shift_batch_norm
 #shift based adam opt.
 
 def binary_cifar10_sbn(input, training=True):
@@ -159,7 +146,9 @@ def binary_cifar10_sbn(input, training=True):
 	return input, output
 
 
-#---MNIST---#	
+#---MNIST---#	(B)
+
+#NB per mnist avremo una MLP
 
 #standard deep neural network with ReLu non-linearity:
 #original batch normalization and vanilla adam
@@ -205,7 +194,7 @@ def binary_mnist(input, training=True):
 	
 
 #BNN with SIGN FUNCTION
-#shift based batch normalization
+#shift based batch normalization  ----> layers.shift_batch_norm
 #shift based adam opt.
 	
 def binary_mnist_sbn(input, training=True):

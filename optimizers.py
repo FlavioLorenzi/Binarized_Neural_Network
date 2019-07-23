@@ -7,6 +7,10 @@ from tensorflow.python.training import optimizer
 
 import layers
 
+
+#SWITHC TRA ADAM E SHIFT BASED ADAMAX
+
+
 ap2 = layers.ap2
 
 class ShiftBasedAdaMaxOptimizer(optimizer.Optimizer):

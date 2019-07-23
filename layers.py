@@ -12,6 +12,8 @@ def binarize(x):
 		return tf.sign(tf.sign(x)+1e-8) #	<-- this should be ok, ugly but okay
 
 
+#dense per le reti binarie
+#NB sono utilizzati infatti binarize e clip_by_value
 	
 def binaryDense(inputs, units, activation=None, use_bias=True, trainable=True, binarize_input=True, name='binarydense', reuse=False):
 	
@@ -46,6 +48,8 @@ def binaryDense(inputs, units, activation=None, use_bias=True, trainable=True, b
 		return out
 
 
+#conv2d per le reti binarie
+#NB sono utilizzati infatti binarize e clip_by_value
 
 def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bias=True, activation=None, binarize_input=True, trainable=True, 
 					reuse=False, use_cudnn_on_gpu=True, data_format='NHWC', dilations=[1,1,1,1], name='binaryconv2d'):
@@ -110,14 +114,16 @@ def ap2(x):
 ## variables. For this reason the shift based batch normalizations are still implemented with   ##
 ## multiplications and divisions but using only the correspondent approximated power of two in  ##
 ## place of the op. right var (obtaining the same result of a shifting).						##
-## Consequently these shift based batch normalizations have a smaller precision than standars	##
+## Consequently these shift based batch normalizations have a SMALLER PRECISION than standars	##
 ## methods and are slower than the hypotetical implementations with hardware accelerated float  ##
 ## shifting. They are used only to show their behaviour.										##
 ##################################################################################################
 ##################################################################################################
  
+
 # Shift based Batch Normalizing Transform, applied to activation (x) over a mini-batch,
 #as described in http://arxiv.org/abs/1502.03167
+
 def shift_batch_norm(x, training=True, momentum=0.99, epsilon=1e-8, reuse=False, name="batch_norm"):
 	
 	xshape = x.get_shape()[1:]
@@ -150,9 +156,11 @@ def shift_batch_norm(x, training=True, momentum=0.99, epsilon=1e-8, reuse=False,
 	return out
 
 
+
 # Spatial shift based batch normalization, like spatial batch normalization it keeps
 # the convolution property. Hence it applies the same transformation to each element
 # of the same feature map
+
 def spatial_shift_batch_norm(x, data_format='NHWC', training=True, momentum=0.99, epsilon=1e-8, reuse=False, name="spatial_batch_norm"):
 	assert data_format in ['NHWC', 'NCHW']
 	
