@@ -1,5 +1,6 @@
-#Flavio Lorenzi AIRO
-#script per il training della rete
+#@Autor: Flavio Lorenzi 
+#AIRO Neural Network Project, Sapienza University
+
 
 import tensorflow as tf
 import numpy as np
@@ -8,7 +9,8 @@ import networks
 import math
 import time
 import os
-from utils.progressbar import ProgressBar
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 import optimizers
 
 
@@ -98,18 +100,11 @@ with tf.name_scope('trainer_optimizer'):
 	#il learning rate ad ogni iterazione decade e va aggiornato
 	learning_rate = tf.Variable(LR, name='learning_rate')
 
-	#VEDERE SE SI PUO FARE PIU SEMPLICE! ! !
+	
 	#AD OGNI ITER DIMINUISCE 
 	learning_rate_decay = tf.placeholder(tf.float32, shape=(), name='lr_decay')
 	update_learning_rate = tf.assign(learning_rate, learning_rate / learning_rate_decay)
 	
-
-	#nuovo metodo per la caduta del LR
-
-	#learning_rate = tf.train.exponential_decay(LR, )
-
-
-	#????????
 
 
 
@@ -185,47 +180,55 @@ with tf.Session() as sess:
 		sess.run(metrics_initializer)
 		sess.run(switch_training_inference)
 		
-		progress_info = ProgressBar(total=NUM_BATCHES_TRAIN, prefix=' train', show=True)
+		
 		
 
 		# Training of the network
-		for nb in range(NUM_BATCHES_TRAIN):
+		print(" TRAINING ")
+
+		for i in tqdm(range(NUM_BATCHES_TRAIN)):
 			sess.run(train_op)	# train network on a single batch
 			batch_trn_loss, _ = sess.run(metrics_update)
-			trn_loss, a = sess.run(metrics)
-			
-			progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(trn_loss, a) )
+			training_loss, training_accuracy = sess.run(metrics)
 
 
-		print()
+		print("")
+		print("Training loss: ",round(training_loss,3), " Training accuracy: ", round(training_accuracy,3))
+		print("")
 		
 		summary = sess.run(merged_summary)
 		train_writer.add_summary(summary, epoch)
 		
 
-
-		###
 		
-		# initialize the test dataset and set batc normalization inference
+		# Initialize the test dataset and set batc normalization inference
 		sess.run(test_initialization, feed_dict={data_features:x_test, data_labels:y_test, batch_size:BATCHSIZE})
 		sess.run(metrics_initializer)
+		# switch between training phase and test phase
 		sess.run(switch_training_inference)
-		
-		progress_info = ProgressBar(total=NUM_BATCHES_TEST, prefix='  eval', show=True)
 		
 		
 		# Evaluation of the network
-		for nb in range(NUM_BATCHES_TEST):
+		for i in tqdm(range(NUM_BATCHES_TEST)):
 			sess.run([loss, metrics_update])
-			val_loss, a = sess.run(metrics)
+			val_loss, val_accuracy = sess.run(metrics)
 			
-			progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(val_loss, a) )
-		print()
+		print("")
+		print("Test loss:",round(val_loss,3)," Test accuracy: ",round(val_acc,3))
+		print("")
 		
 		summary  = sess.run(merged_summary)
 		test_writer.add_summary(summary, epoch)
 		
-	
+
+
+		#########
+		#########
+		#GRAFICI#  ....TODO....
+		#########
+		#########
+
+
 
 
 	train_writer.close()
