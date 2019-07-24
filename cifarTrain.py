@@ -8,7 +8,7 @@ import networks
 import math
 import time
 import os
-#from utils.progressbar import ProgressBar    ----> TO REDO
+from utils.progressbar import ProgressBar
 import optimizers
 
 
@@ -22,11 +22,22 @@ def load_cifar10():
 	(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 	return x_train, np.squeeze(y_train), x_test, np.squeeze(y_test), 10
 
-#PARAMETERS
+
+
+#PARAMETERS INTERFACE
 DATASET = 'cifar10'
+NETWORK = 'binary'  #can choice between binary and binary_sbn 
+print(" ")
+print(" ")
+print("--------------------------------------------------------------------------------") 
+print("The dataset used for the training is "+str(DATASET)+" with a network of type "+str(NETWORK))
 EPOCHS = 10
+print("It will be trained for  = "+str(EPOCHS)+ "epochs")
 LR = 1e-3     #Optimizer Learning Rate
-NETWORK = 'binary'  #can choice between binary and binary_sbn  
+print("Initial Learning Rate = "+str(LR))
+print("--------------------------------------------------------------------------------") 
+print(" ")
+print(" ")
 LOGDIR = './logs/'
 MODELDIR = './models/'
 BATCHSIZE = 32
@@ -87,10 +98,22 @@ with tf.name_scope('trainer_optimizer'):
 	#il learning rate ad ogni iterazione decade e va aggiornato
 	learning_rate = tf.Variable(LR, name='learning_rate')
 
-	#VEDERE SE SI PUO FARE PIU SEMPLICE! ! ! 
+	#VEDERE SE SI PUO FARE PIU SEMPLICE! ! !
+	#AD OGNI ITER DIMINUISCE 
 	learning_rate_decay = tf.placeholder(tf.float32, shape=(), name='lr_decay')
 	update_learning_rate = tf.assign(learning_rate, learning_rate / learning_rate_decay)
 	
+
+	#nuovo metodo per la caduta del LR
+
+	#learning_rate = tf.train.exponential_decay(LR, )
+
+
+	#????????
+
+
+
+
 	#ottimizzatore corrente
 	opt_constructor = optimizers.ShiftBasedAdaMaxOptimizer if SWITCH  else tf.train.AdamOptimizer
 	optimizer = opt_constructor(learning_rate=learning_rate)
@@ -119,8 +142,6 @@ with tf.variable_scope('metrics'):
 # Isolate the variables stored behind the scenes by the metric operation
 metrics_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metrics")
 metrics_initializer = tf.variables_initializer(metrics_variables)
-
-#?????????????????????????????????????
 
 
 # summaries
@@ -157,15 +178,15 @@ with tf.Session() as sess:
 		
 
 
-		###
+	
 
 		# initialize training dataset and set batch normalization training
 		sess.run(train_initialization, feed_dict={data_features:x_train, data_labels:y_train, batch_size:BATCHSIZE})
 		sess.run(metrics_initializer)
 		sess.run(switch_training_inference)
 		
-		#progress_info = ProgressBar(total=NUM_BATCHES_TRAIN, prefix=' train', show=True)
-
+		progress_info = ProgressBar(total=NUM_BATCHES_TRAIN, prefix=' train', show=True)
+		
 
 		# Training of the network
 		for nb in range(NUM_BATCHES_TRAIN):
@@ -173,7 +194,9 @@ with tf.Session() as sess:
 			batch_trn_loss, _ = sess.run(metrics_update)
 			trn_loss, a = sess.run(metrics)
 			
-			#progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(trn_loss, a) )
+			progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(trn_loss, a) )
+
+
 		print()
 		
 		summary = sess.run(merged_summary)
@@ -188,15 +211,15 @@ with tf.Session() as sess:
 		sess.run(metrics_initializer)
 		sess.run(switch_training_inference)
 		
-		#progress_info = ProgressBar(total=NUM_BATCHES_TEST, prefix='  eval', show=True)
-
+		progress_info = ProgressBar(total=NUM_BATCHES_TEST, prefix='  eval', show=True)
+		
 		
 		# Evaluation of the network
 		for nb in range(NUM_BATCHES_TEST):
 			sess.run([loss, metrics_update])
 			val_loss, a = sess.run(metrics)
 			
-			#progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(val_loss, a) )
+			progress_info.update_and_show( suffix = '  loss {:.4f},  acc: {:.3f}'.format(val_loss, a) )
 		print()
 		
 		summary  = sess.run(merged_summary)
