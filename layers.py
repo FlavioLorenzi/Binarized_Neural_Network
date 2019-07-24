@@ -15,7 +15,7 @@ def binarize(x):
 #dense per le reti binarie
 #NB sono utilizzati infatti binarize e clip_by_value
 	
-def binaryDense(inputs, units, activation=None, use_bias=True, trainable=True, binarize_input=True, name='binarydense', reuse=False):
+def binaryDense(inputs, units, activation=None, use_bias=False, trainable=True, binarize_input=True, name='binarydense', reuse=False):
 	
 	# flatten the input 
 	flat_input = tf.contrib.layers.flatten(inputs)
@@ -51,7 +51,7 @@ def binaryDense(inputs, units, activation=None, use_bias=True, trainable=True, b
 #conv2d per le reti binarie
 #NB sono utilizzati infatti binarize e clip_by_value
 
-def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bias=True, activation=None, binarize_input=True, trainable=True, 
+def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bias=False, activation=None, binarize_input=True, trainable=True, 
 					reuse=False, use_cudnn_on_gpu=True, data_format='NHWC', dilations=[1,1,1,1], name='binaryconv2d'):
 	
 	assert len(strides) == 2
