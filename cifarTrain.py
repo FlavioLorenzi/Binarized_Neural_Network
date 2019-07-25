@@ -29,21 +29,12 @@ def load_cifar10():
 #PARAMETERS INTERFACE
 DATASET = 'cifar10'
 NETWORK = 'binary'  #can choice between binary and binary_sbn 
-print(" ")
-print(" ")
-print("--------------------------------------------------------------------------------") 
-print("The dataset used for the training is "+str(DATASET)+" with a network of type "+str(NETWORK))
 EPOCHS = 10
-print("It will be trained for  = "+str(EPOCHS)+ "epochs")
 LR = 1e-3     #Optimizer Learning Rate
-print("Initial Learning Rate = "+str(LR))
-print("--------------------------------------------------------------------------------") 
-print(" ")
-print(" ")
 LOGDIR = './logs/'
 MODELDIR = './models/'
 BATCHSIZE = 32
-SWITCH = False #if true we pass on ADAMAX from standard VANILLA ADAM
+SWITCH = True #if true we pass on ADAMAX from standard VANILLA ADAM
 
 
 
@@ -89,30 +80,31 @@ test_initialization = data_iterator.make_initializer(test_data)
 
 
 # NETWORK INIT
-#VERIFICA SE POSSO ELIMINARE CODICE METTENDO TRUE AL FLAG ############
+#If training is true, upload the network
 is_training = tf.get_variable('is_training', initializer=tf.constant(False, tf.bool))
 switch_training_inference = tf.assign(is_training, tf.logical_not(is_training))
-xnet, ynet = networks.get_network(NETWORK, DATASET, features, training=is_training) #true
+xnet, ynet = networks.get_network(NETWORK, DATASET, features, training=is_training) 
 
 
 
 with tf.name_scope('trainer_optimizer'):
-	#il learning rate ad ogni iterazione decade e va aggiornato
-	learning_rate = tf.Variable(LR, name='learning_rate')
-
 	
-	#AD OGNI ITER DIMINUISCE 
+	learning_rate = tf.Variable(LR, name='learning_rate')
+	
+	#Ad ogni iter il learning rate decade e va aggiornato
 	learning_rate_decay = tf.placeholder(tf.float32, shape=(), name='lr_decay')
 	update_learning_rate = tf.assign(learning_rate, learning_rate / learning_rate_decay)
 	
 
 
+	#Ottimizzatore corrente
 
-
-	#ottimizzatore corrente
+	#Adam is an optimization algorithm that can used instead of the classical stochastic gradient descent procedure
+	#Shift Based Adamax is an extension of Adam:
 	opt_constructor = optimizers.ShiftBasedAdaMaxOptimizer if SWITCH  else tf.train.AdamOptimizer
 	optimizer = opt_constructor(learning_rate=learning_rate)
 	cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ynet, labels=labels)
+
 	# loss function: "ci fa capire quanto funziona la rete"
     # reduce_mean : calcola la media degli elementi (tra le dimensioni di un tensore)
 	loss = tf.reduce_mean(cross_entropy)
@@ -183,8 +175,14 @@ with tf.Session() as sess:
 		
 		
 
-		# Training of the network
-		print(" TRAINING ")
+		# Training the network
+		
+		print(" ")
+		print("The dataset used for the training is "+str(DATASET)+" with a network of type "+str(NETWORK))
+		print("It will be trained for "+str(EPOCHS)+ " epochs") 
+		print("With initial Learning Rate = "+str(LR))
+		print("Shift-Based ADAMAX optimizer is active now") if SWITCH else print("Vanilla Adam optimizer is active now")
+		print(" ")
 
 		for i in tqdm(range(NUM_BATCHES_TRAIN)):
 			sess.run(train_op)	# train network on a single batch
@@ -219,17 +217,7 @@ with tf.Session() as sess:
 		
 		summary  = sess.run(merged_summary)
 		test_writer.add_summary(summary, epoch)
-		
-
-
-		#########
-		#########
-		#GRAFICI#  ....TODO....
-		#########
-		#########
-
-
-
+	
 
 	train_writer.close()
 	test_writer.close()
