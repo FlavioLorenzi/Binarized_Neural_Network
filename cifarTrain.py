@@ -5,15 +5,17 @@
 import tensorflow as tf
 import numpy as np
 import argparse
-import networks
 import math
+import datetime
 import time
 import os
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+
+import networks
 import optimizers
 
-
+now = datetime.datetime.now()
 ##############################
 ## WE ARE TRAINING CIFAR-10 ##
 ##############################
@@ -29,17 +31,18 @@ def load_cifar10():
 #PARAMETERS INTERFACE
 DATASET = 'cifar10'
 NETWORK = 'binary'  #can choice between binary and binary_sbn 
-EPOCHS = 10
+EPOCHS = 2
 LR = 1e-3     #Optimizer Learning Rate
 LOGDIR = './logs/'
 MODELDIR = './models/'
 BATCHSIZE = 32
-SWITCH = True #if true we pass on ADAMAX from standard VANILLA ADAM
+SWITCH = False #if true we pass on SHIFT BASED ADAMAX from the standard VANILLA ADAM
 
 
 
 #DOWNLOADING DATA SESSION in folders
-timestamp = int(time.time())
+timestamp = now.strftime("%Y-%m-%d %H:%M")  #per salvarla con data e ora
+
 model_name = ''.join([str(timestamp), '_', NETWORK, '_', DATASET])
 session_logdir = os.path.join(LOGDIR, model_name)
 train_logdir = os.path.join(session_logdir, 'train')
@@ -218,6 +221,44 @@ with tf.Session() as sess:
 		summary  = sess.run(merged_summary)
 		test_writer.add_summary(summary, epoch)
 	
+
+		#-------------------------------------------------
+		# inserisco nel grafico
+		epoch_set.append(epoch+1)
+
+		set_training_loss.append(training_loss)
+		set_training_acc.append(training_accuracy)
+
+		set_test_loss.append(val_loss)
+		set_test_acc.append(val_acc)
+		#-------------------------------------------------
+
+		train_writer.close()
+		test_writer.close()
+
+		saver.save(sess, os.path.join(session_modeldir, 'model.ckpt'))
+
+	plt.figure(1)
+	# figure 1.1 is about loss variance in time for training and test
+	plt.subplot(211)
+	plt.plot(epoch_set, set_training_loss, 'b', label = 'trainig')
+	plt.plot(epoch_set, set_test_loss, 'r', label='test')
+	plt.legend()
+	plt.xlabel('epochs')
+	plt.ylabel('LOSS')
+
+	# figure 1.2 is about accuracy variance in time for training and test
+	plt.subplot(212)
+	plt.plot(epoch_set, set_training_acc, 'b', label='training')
+	plt.plot(epoch_set, set_test_acc, 'r', label='test')
+	plt.legend()
+	plt.xlabel('epochs')
+	plt.ylabel('ACCURACY')
+
+	plt.show()
+
+
+
 
 	train_writer.close()
 	test_writer.close()
