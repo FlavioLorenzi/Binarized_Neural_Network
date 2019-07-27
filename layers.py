@@ -99,6 +99,8 @@ def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bia
 	
 # compute the approximate power of 2 of the input x
 # via hardware it is as simple as get the index of the most significative bit
+
+# ap2(x) viene calcolato come somma fra gradino(x) + 2^(round( log2 (modulo di x) )
 def ap2(x):
 	return tf.sign(x) * tf.pow(2.0, tf.round(tf.log(tf.abs(x)) / tf.log(2.0)))
 
