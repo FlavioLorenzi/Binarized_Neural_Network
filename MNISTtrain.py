@@ -221,10 +221,10 @@ with tf.Session() as sess:
 		set_test_acc.append(val_acc)
 		#-------------------------------------------------
 
-		train_writer.close()
-		test_writer.close()
+	train_writer.close()
+	test_writer.close()
 
-		saver.save(sess, os.path.join(session_modeldir, 'model.ckpt'))
+	saver.save(sess, os.path.join(session_modeldir, 'model.ckpt'))
 
 	plt.figure(1)
 	# figure 1.1 is about loss variance in time for training and test
