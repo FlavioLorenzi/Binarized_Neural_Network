@@ -1,7 +1,7 @@
 import tensorflow as tf
 import layers
 
-# CREAZIONE DELLE 6 RETI (3+3)
+# CREAZIONE DELLE 4 RETI (2+2)
 # GET NETWORK PER TRAINING
 
 #---CIFAR 10---# (A)
