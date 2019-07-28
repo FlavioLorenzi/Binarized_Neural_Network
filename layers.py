@@ -8,12 +8,11 @@ def binarize(x):
 	# we also have to reassign the sign gradient otherwise it will be almost everywhere equal to zero
 	# using the straight through estimator
 	with tf.get_default_graph().gradient_override_map({'Sign': 'Identity'}):
-		#return tf.sign(x)				#	<-- wrong sign doesn't return +1 for zero
-		return tf.sign(tf.sign(x)+1e-8) #	<-- this should be ok, ugly but okay
+		return tf.sign(tf.sign(x)+1e-8)
 
 
-#dense per le reti binarie
-#NB sono utilizzati infatti binarize e clip_by_value
+# dense per le reti binarie
+# NB sono utilizzati infatti binarize e clip_by_value
 	
 def binaryDense(inputs, units, activation=None, use_bias=False, trainable=True, binarize_input=True, name='binarydense', reuse=False):
 	
@@ -25,9 +24,14 @@ def binaryDense(inputs, units, activation=None, use_bias=False, trainable=True, 
 	
 	with tf.variable_scope(name, reuse=reuse):
 		# getting layer weights and add clip operation (between -1, 1)
-		w = tf.get_variable('weight', [in_units, units], initializer=tf.contrib.layers.xavier_initializer(), trainable=trainable)
-		w = tf.clip_by_value(w, -1, 1)
+		
+		# xavier initializer : This initializer is designed to keep the scale of the gradients roughly the same in all layers
+		xavier = tf.contrib.layers.xavier_initializer()
+		random = tf.initializers.random_uniform()
 
+		w = tf.get_variable('weight', [in_units, units], initializer=xavier, trainable=trainable)
+		w = tf.clip_by_value(w, -1, 1)
+		
 		# binarize input and weights of the layer
 		if binarize_input:
 			flat_input = binarize(flat_input)
@@ -35,9 +39,12 @@ def binaryDense(inputs, units, activation=None, use_bias=False, trainable=True, 
 		
 		# adding layer operation -> (w*x + b)
 		out = tf.matmul(flat_input, w)
+		
+		''' not used
 		if use_bias:
 			b = tf.get_variable('bias', [units], initializer=tf.zeros_initializer(), trainable=trainable)
-			out = tf.nn.bias_add(out, b)
+			out = tf.nn.bias_add(out, b)à
+		'''
 		
 		# applying activation function
 		if activation:
@@ -48,8 +55,8 @@ def binaryDense(inputs, units, activation=None, use_bias=False, trainable=True, 
 		return out
 
 
-#conv2d per le reti binarie
-#NB sono utilizzati infatti binarize e clip_by_value
+# conv2d per le reti binarie
+# NB sono utilizzati infatti binarize e clip_by_value
 
 def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bias=False, activation=None, binarize_input=True, trainable=True, 
 					reuse=False, use_cudnn_on_gpu=True, data_format='NHWC', dilations=[1,1,1,1], name='binaryconv2d'):
