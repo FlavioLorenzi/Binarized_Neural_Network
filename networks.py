@@ -1,20 +1,15 @@
 import tensorflow as tf
 import layers
 
-
-#CREAZIONE DELLE 6 RETI (3+3)
-
-#GET NETWORK PER TRAINING
-
-
+# CREAZIONE DELLE 6 RETI (3+3)
+# GET NETWORK PER TRAINING
 
 #---CIFAR 10---# (A)
 
-#NB per cifar avremo CONVOLUTIONAL NEURAL NETWORK
+# NB per cifar avremo CONVOLUTIONAL NEURAL NETWORK
 
-
-#BNN with SIGN FUNCTION
-#original batch normalization and vanilla adam
+# BNN with SIGN FUNCTION
+# original batch normalization and vanilla adam
 
 def binary_cifar10(input, training=True):
 	out = layers.binaryConv2d(input, 128, [3,3], [1,1], padding='VALID', binarize_input=False, name='bc_conv2d_1')
@@ -57,9 +52,9 @@ def binary_cifar10(input, training=True):
 	
 	return input, output
 	
-#BNN with SIGN FUNCTION
-#shift based batch normalization ---> spatial_shift_batch_norm quando è ancora conv2d, poi diventa shift_batch_norm
-#shift based adam opt.
+# BNN with SIGN FUNCTION
+# shift based batch normalization ---> spatial_shift_batch_norm quando è ancora conv2d, poi diventa shift_batch_norm
+# shift based adam opt.
 
 def binary_cifar10_sbn(input, training=True):
 	out = layers.binaryConv2d(input, 128, [3,3], [1,1], padding='VALID',  binarize_input=False, name='bc_conv2d_1')
@@ -102,17 +97,15 @@ def binary_cifar10_sbn(input, training=True):
 	
 	return input, output
 
+# ---MNIST---#	(B)
 
-#---MNIST---#	(B)
-
-#NB per mnist avremo una MLP
-
+# NB per mnist avremo una MLP
 	
-#BNN with SIGN FUNCTION
-#original batch normalization and vanilla adam
+# BNN with SIGN FUNCTION
+# original batch normalization and vanilla adam
 
 def binary_mnist(input, training=True):
-	fc1 = layers.binaryDense(input, 2048, activation=None, name="binarydense1", binarize_input=False)
+	fc1 = layers.binaryDense(input, 784, activation=None, name="binarydense1", binarize_input=False)
 	bn1 = tf.layers.batch_normalization(fc1, training=training)
 	ac1 = tf.clip_by_value(bn1, -1, 1)
 
@@ -128,14 +121,13 @@ def binary_mnist(input, training=True):
 	output =  tf.layers.batch_normalization(fc4, training=training)
 	
 	return input, output
-	
 
-#BNN with SIGN FUNCTION
-#shift based batch normalization  ----> layers.shift_batch_norm
-#shift based adam opt.
+# BNN with SIGN FUNCTION
+# shift based batch normalization  ----> layers.shift_batch_norm
+# shift based adam opt.
 	
 def binary_mnist_sbn(input, training=True):
-	fc1 = layers.binaryDense(input, 2048, activation=None, name="binarydense1", binarize_input=False)
+	fc1 = layers.binaryDense(input, 784, activation=None, name="binarydense1", binarize_input=False)
 	bn1 = layers.shift_batch_norm(fc1, training=training, name="batch_norm1")
 	ac1 = tf.clip_by_value(bn1, -1, 1)
 
@@ -151,11 +143,8 @@ def binary_mnist_sbn(input, training=True):
 	output = layers.shift_batch_norm(fc4, training=training, name="batch_norm4")
 	
 	return input, output
-	
-	
 
-
-#passaggio newtork corrispondente
+# scelta network adatta
 
 def get_network(type, dataset, *args, **kargs):
 
