@@ -102,44 +102,25 @@ def binaryConv2d(inputs, filters, kernel_size, strides, padding="VALID", use_bia
 		
 		return out
 
-
-	
+# ap2(x) viene calcolato come somma fra gradino(x) + 2^(round( log2 (modulo di x) )
 # compute the approximate power of 2 of the input x
 # via hardware it is as simple as get the index of the most significative bit
-
-# ap2(x) viene calcolato come somma fra gradino(x) + 2^(round( log2 (modulo di x) )
 def ap2(x):
 	return tf.sign(x) * tf.pow(2.0, tf.round(tf.log(tf.abs(x)) / tf.log(2.0)))
 
-	
+'''
+In this work multiplication is still used somewhere cause we decide to not implement 
+'''
 
-	
-
-##################################################################################################
-############################################ NOTE ################################################
-##################################################################################################
-## The functions below computing batch normalizations should use shifting operations instead of ##
-## multiplications and divisions. Clearly the shift operations are only implemented for integer ##
-## variables. For this reason the shift based batch normalizations are still implemented with   ##
-## multiplications and divisions but using only the correspondent approximated power of two in  ##
-## place of the op. right var (obtaining the same result of a shifting).						##
-## Consequently these shift based batch normalizations have a SMALLER PRECISION than standars	##
-## methods and are slower than the hypotetical implementations with hardware accelerated float  ##
-## shifting. They are used only to show their behaviour.										##
-##################################################################################################
-##################################################################################################
- 
-
-# Shift based Batch Normalizing Transform, applied to activation (x) over a mini-batch,
-#as described in http://arxiv.org/abs/1502.03167
-
+# FOR DENSENET
+# Shift based Batch Normalizing Transform, applied to activation (x) over a mini-batch
 def shift_batch_norm(x, training=True, momentum=0.99, epsilon=1e-8, reuse=False, name="batch_norm"):
-	
 	xshape = x.get_shape()[1:]
-	
+
 	with tf.variable_scope(name, reuse=reuse):
+		# trainable parameters
 		gamma = tf.get_variable('gamma', xshape, initializer=tf.ones_initializer, trainable=True)
-		beta  = tf.get_variable('beta', xshape, initializer=tf.zeros_initializer, trainable=True)
+		beta = tf.get_variable('beta', xshape, initializer=tf.zeros_initializer, trainable=True)
 		
 		mov_avg = tf.get_variable('mov_avg', xshape, initializer=tf.zeros_initializer, trainable=False)
 		mov_var = tf.get_variable('mov_std', xshape, initializer=tf.ones_initializer, trainable=False)
@@ -147,7 +128,7 @@ def shift_batch_norm(x, training=True, momentum=0.99, epsilon=1e-8, reuse=False,
 		def training_xdot():
 			avg = tf.reduce_mean(x, axis=0)							# feature means
 			cx = x - avg											# centered input
-			var = tf.reduce_mean(tf.multiply(cx, ap2(cx)), axis=0)	# apx variance
+			var = tf.reduce_mean(tf.multiply(cx, ap2(cx)), axis=0)  # apx variance
 			
 			# updating ops. for moving average and moving variance used at inference time
 			avg_update = tf.assign(mov_avg, momentum * mov_avg + (1.0 - momentum) * avg)
@@ -158,13 +139,19 @@ def shift_batch_norm(x, training=True, momentum=0.99, epsilon=1e-8, reuse=False,
 			
 		def inference_xdot():
 			return (x - mov_avg) / ap2(tf.sqrt(mov_var + epsilon))
-		
+
+		# if training is true returns training_xdot else inference_xdot
 		xdot = tf.cond(training, training_xdot, inference_xdot)
-		out = tf.multiply(ap2(gamma), xdot) + beta					# scale and shift input distribution
+
+		# scale and shift input distribution
+		out = tf.multiply(ap2(gamma), xdot) + beta
+
+		# this is why shift is not implemented - int32 and float32 type error
+		# x = tf.cast(ap2(gamma), tf.int32)
+		# y = tf.cast(xdot, tf.int32)
+		# out = tf.compat.v2.bitwise.right_shift(x,y) + beta
 	
 	return out
-
-
 
 # Spatial shift based batch normalization, like spatial batch normalization it keeps
 # the convolution property. Hence it applies the same transformation to each element
