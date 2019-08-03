@@ -1,5 +1,7 @@
 ! ! !  Work In Progress ! ! !  
 
+*REPORT: https://github.com/micheleciciolla/michele_binNN/blob/master/reportNN.pdf
+
 Binarized Neural Network on three types of datasets: MNIST, CIFAR-10
 
 Tensorflow framework and Python_3 are required.
