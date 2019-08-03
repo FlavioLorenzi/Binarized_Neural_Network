@@ -27,8 +27,8 @@ def load_mnist():
 
 ''' ---------------- PARAMETERS OF THE NETWORK ----------------------'''
 # Type of network to be used: 2 choices
-NETWORK = 'binary'
-# NETWORK = 'binary_sbn'
+# NETWORK = 'binary'
+NETWORK = 'binary_sbn'
 
 # Dataset to be used for the learning task
 DATASET = 'mnist'
@@ -38,19 +38,21 @@ MODELDIR = './models/'
 LOGDIR = './logs/'
 
 # Number of epochs performed during training
-EPOCHS = 5
+EPOCHS = 20
 # Dimension of the training batch
 BATCH_SIZE = 100
 # Starting optimizer learning rate value
 STEPSIZE = 1e-3
 
 # Toggle th use of shift based AdaMax instead of vanilla Adam optimizer
-SHIFT_OPT = False  # if true use AdaMax
+SHIFT_OPT = True  # if true use AdaMax
 ''' ---------------------------------------------------------------'''
 
 # creating directory and files for saving model
-timestamp = now.strftime("%Y-%m-%d %H:%M")
-model_name = ''.join([str(timestamp), '_', NETWORK, '_', DATASET])
+timestamp = now.strftime("%m-%d %H:%M")
+time = now.strftime("%H-%M")
+date = datetime.date.today()
+model_name = ''.join([str(date), '_', NETWORK, '_', DATASET, '_', str(time)])
 session_logdir = os.path.join(LOGDIR, model_name)
 train_logdir = os.path.join(session_logdir, 'train')
 test_logdir = os.path.join(session_logdir, 'test')
@@ -90,6 +92,8 @@ test_initialization = data_iterator.make_initializer(test_data)
 is_training = tf.get_variable('is_training', initializer=tf.constant(True, tf.bool))
 # function to switch training state to false = test
 switch_training_inference = tf.assign(is_training, tf.logical_not(is_training))
+
+# HERE WE CREATE THE NETWORK ACCORDING TO INPUTS
 xnet, ynet = networks.get_network(NETWORK, DATASET, features, training=is_training)
 
 
@@ -147,6 +151,7 @@ epoch_set = []
 
 # now we start the session
 with tf.Session() as sess:
+    print(now.strftime("%Y-%m-%d %H:%M"))
 
     # tensorboard summary writer
     train_writer = tf.summary.FileWriter(train_logdir, sess.graph)
@@ -163,6 +168,7 @@ with tf.Session() as sess:
 
         # initialize training and set batch normalization training
         sess.run(train_initialization, feed_dict={data_features: x_train, data_labels: y_train, batch_size: BATCH_SIZE})
+
         # metrics are used to computed all infos needed
         sess.run(metrics_initializer)
         # sess.run(switch_training_inference)
@@ -176,7 +182,7 @@ with tf.Session() as sess:
             # here we get loss and accuracy via metrics measures
             training_loss, training_accuracy = sess.run(metrics)
 
-        print()
+        print("")
         print("Training loss: ", round(training_loss, 3), " Training accuracy: ", round(training_accuracy, 3))
         print("------------------------------------------------------------")
 
@@ -200,7 +206,7 @@ with tf.Session() as sess:
                 # compute loss and test accuracy
                 test_loss, test_accuracy = sess.run(metrics)
 
-            print()
+            print("")
             print("Test loss: ", round(test_loss, 3), " Test accuracy: ", round(test_accuracy, 3))
             print("------------------------------------------------------------")
 
@@ -235,7 +241,8 @@ with tf.Session() as sess:
     plt.ylabel('ACCURACY')
 
     plt.show()
+    end = now.strftime("%m-%d %H:%M")
 
-print('\nTraining completed!\nNetwork model is saved in  {}\nTraining logs are saved in {}'.format(session_modeldir,
-                                                                                                   session_logdir))
-print("ended :", now.strftime("%Y-%m-%d %H:%M"))
+print('\nTraining completed!\nNetwork model is saved in  {}\nTraining logs are saved in {}'.format(session_modeldir,session_logdir))
+print("Ended :", end)
+print('\nOpen TensorBoard by tiping :\ntensorboard --logdir=logs/')
