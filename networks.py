@@ -52,7 +52,7 @@ def binary_cifar10(input, training=True):
 	
 	return input, output
 	
-# BNN with SIGN FUNCTION
+# BNN with SIGN FUNCTION 
 # shift based batch normalization ---> spatial_shift_batch_norm quando è ancora conv2d, poi diventa shift_batch_norm
 # shift based adam opt.
 
@@ -101,7 +101,7 @@ def binary_cifar10_sbn(input, training=True):
 
 # NB per mnist avremo una MLP
 	
-# BNN with SIGN FUNCTION
+# BNN with SIGN FUNCTION FROM BINARIZE(X) function
 # original batch normalization and vanilla adam
 
 def binary_mnist(input, training=True):
@@ -122,7 +122,7 @@ def binary_mnist(input, training=True):
 	
 	return input, output
 
-# BNN with SIGN FUNCTION
+# BNN with SIGN FUNCTION FROM BINARIZE(X) function
 # shift based batch normalization  ----> layers.shift_batch_norm
 # shift based adam opt.
 	
