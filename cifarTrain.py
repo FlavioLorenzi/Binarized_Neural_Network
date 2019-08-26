@@ -30,13 +30,13 @@ def load_cifar10():
 
 #PARAMETERS INTERFACE
 DATASET = 'cifar10'
-NETWORK = 'binary'  #can choice between binary and binary_sbn 
-EPOCHS = 2
+NETWORK = 'binary_sbn'  #can choice between binary and binary_sbn 
+EPOCHS = 20
 LR = 1e-3     #Optimizer Learning Rate
 LOGDIR = './logs/'
 MODELDIR = './models/'
-BATCHSIZE = 32
-SWITCH = False #if true we pass on SHIFT BASED ADAMAX from the standard VANILLA ADAM
+BATCHSIZE = 100
+SWITCH = True #if true we pass on SHIFT BASED ADAMAX from the standard VANILLA ADAM
 
 
 
@@ -146,6 +146,14 @@ saver = tf.train.Saver()
 NUM_BATCHES_TRAIN = math.ceil(x_train.shape[0] / BATCHSIZE)
 NUM_BATCHES_TEST = math.ceil(x_test.shape[0] / BATCHSIZE)
 
+#Plot settings
+
+set_training_loss = []
+set_training_acc = []
+set_test_loss = []
+set_test_acc = []
+epoch_set=[]
+
 with tf.Session() as sess:
 
 	# tensorboard summary writer
@@ -212,7 +220,7 @@ with tf.Session() as sess:
 		# Evaluation of the network
 		for i in tqdm(range(NUM_BATCHES_TEST)):
 			sess.run([loss, metrics_update])
-			val_loss, val_accuracy = sess.run(metrics)
+			val_loss, val_acc = sess.run(metrics)
 			
 		print("")
 		print("Test loss:",round(val_loss,3)," Test accuracy: ",round(val_acc,3))
