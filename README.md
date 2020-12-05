@@ -15,7 +15,7 @@ In the end it's possible to plot graphics about accuracy and loss of the trained
  See the [report](./Report.pdf)
 
 # Cifar dataset
-![](cifar)
+![](cifar.jpg)
 
 # MNIST dataset
-![](cifar)
+![](mnist.png)
