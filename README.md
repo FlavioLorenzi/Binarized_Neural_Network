@@ -19,3 +19,11 @@ In the end it's possible to plot graphics about accuracy and loss of the trained
 
 # MNIST dataset
 ![](mnist.png)
+
+
+# Partial Results (sbn adamax)
+![](risultati-sbn-adamax/a.png)
+![](risultati-sbn-adamax/b.png)
+
+
+All results are in the report
