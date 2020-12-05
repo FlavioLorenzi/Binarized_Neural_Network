@@ -11,3 +11,6 @@ The default optimizer is the Vanilla Adam, also we improved the network with a p
 
 In the end it's possible to plot graphics about accuracy and loss of the trained network.
 
+# Documentation
+ See the [](report.pdf)
+
