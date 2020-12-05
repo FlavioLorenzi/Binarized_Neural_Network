@@ -1,6 +1,7 @@
-Binarized Neural Network on 2 types of datasets: MNIST, CIFAR-10
+# Binarized Neural Network 
+<a href="https://www.dis.uniroma1.it/"><img src="http://www.dis.uniroma1.it/sites/default/files/marchio%20logo%20eng%20jpg.jpg" width="500"></a>
 
-Tensorflow framework and Python_3 are required.
+Tensorflow framework and Python_3 are required; we trained the network over 2 types of dataset: MNIST and CIFAR-10
 
 For each dataset we will implement: 
   1) A binarized neural network with original batch normalizzation 
